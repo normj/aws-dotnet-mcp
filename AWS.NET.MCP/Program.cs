@@ -7,7 +7,7 @@ var app = new CommandApp();
 
 app.Configure(config =>
 {
-    config.SetApplicationName("MySpectreApp");
+    config.SetApplicationName("AWS .NET MCP");
     config.AddCommand<RegisterCommand>("register")
         .WithDescription("Register mcp server with LLM.");
 
