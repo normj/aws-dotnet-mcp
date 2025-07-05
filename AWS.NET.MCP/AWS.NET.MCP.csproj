@@ -8,6 +8,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Remove="mcp-tools-manifest.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="mcp-tools-manifest.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
       <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.1" />
       <PackageReference Include="Spectre.Console.Cli" Version="0.50.0" />
