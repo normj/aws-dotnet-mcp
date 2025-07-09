@@ -13,13 +13,19 @@ public class UnregisterCommand(IFileManager fileManager) : Command<UnregisterCom
     public class Settings : CommandSettings
     {
         [CommandArgument(0, "[tool-name]")]
-        [Description($"LLM tool to unregister the AWS .NET MCP server with. Valid values are: {nameof(ToolName.AmazonQ)}")]
+        [Description($"LLM tool to unregister the AWS .NET MCP server with. {Constants.VALID_TOOLNAMES_VALUES}")]
         [TypeConverter(typeof(CaseInsensitiveEnumConverter<ToolName>))]
         public ToolName? Tool { get; set; }
     }
 
     public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
     {
+        if (settings.Tool == null)
+        {
+            AnsiConsole.MarkupLine($"[red]Tool name is required. {Constants.VALID_TOOLNAMES_VALUES}[/]");
+            return 1;
+        }
+
         switch (settings.Tool)
         {
             case ToolName.AmazonQ:
@@ -36,6 +42,7 @@ public class UnregisterCommand(IFileManager fileManager) : Command<UnregisterCom
     private async Task UnregisterWithAmazonQ()
     {
         var mcpJsonPath = GetAmazonQConfigLocation();
+        AnsiConsole.MarkupLine($"Unregister in MCP config file [green]{mcpJsonPath}[/].");
 
         JsonNode? root;
 

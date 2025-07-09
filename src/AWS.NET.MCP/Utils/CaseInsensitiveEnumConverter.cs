@@ -9,10 +9,10 @@ namespace AWS.NET.MCP.Utils;
 
 public class CaseInsensitiveEnumConverter<T> : TypeConverter where T : struct, Enum
 {
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+    public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
         => sourceType == typeof(string);
 
-    public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
+    public override object ConvertFrom(ITypeDescriptorContext? context, System.Globalization.CultureInfo? culture, object value)
     {
         if (value is string s && Enum.TryParse<T>(s, ignoreCase: true, out var result))
             return result;

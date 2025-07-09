@@ -28,7 +28,7 @@ public class ManifestToolsLoader
             if (!manifest.MemoryBanks.TryGetValue(kvp.Value.MemoryBank, out var memoryBank))
                 throw new InvalidOperationException($"The memory bank {kvp.Value.MemoryBank} referenced by the tool {kvp.Key} does not exist in the manifest list of memory banks");
 
-            var toolWrapper = new ToolWrapper(kvp.Value.Prompt, memoryBank);
+            var toolWrapper = new ToolWrapper(kvp.Key, kvp.Value.Prompt, memoryBank);
 
             tools.Add(McpServerTool.Create(toolWrapper.ExecuteAsync, new McpServerToolCreateOptions
             {
@@ -66,25 +66,38 @@ public class ManifestToolsLoader
             Those files can be found as keys in the JSON document.
             """;
 
+        private readonly string _toolName;
         private readonly string _prompt;
         private readonly MemoryBank _memoryBank;
 
-        public ToolWrapper(string prompt, MemoryBank memoryBank) 
+        public ToolWrapper(string toolName, string prompt, MemoryBank memoryBank) 
         {
+            _toolName = toolName;
             _prompt = prompt;
             _memoryBank = memoryBank;
         }
 
         public async Task<string> ExecuteAsync()
         {
-            var memoryBankDefinition = await LoadMemoryBank();
+            try
+            {
+                var memoryBankDefinition = await LoadMemoryBank();
 
-            var builder = new StringBuilder();
-            builder.AppendLine(MEMORY_BANK_DESCRIPTION.Replace("{START_FILE}", _memoryBank.StartFile));
-            builder.AppendLine(_prompt);
-            builder.AppendLine(memoryBankDefinition);
+                var builder = new StringBuilder();
+                builder.AppendLine(MEMORY_BANK_DESCRIPTION.Replace("{START_FILE}", _memoryBank.StartFile));
+                builder.AppendLine(_prompt);
+                builder.AppendLine(memoryBankDefinition);
 
-            return builder.ToString();
+                return builder.ToString();
+            }
+            catch (Exception ex)
+            {
+                // User stderr to not interfere with the MCP communication of stdout.
+                Console.Error.WriteLine($"Failed to build prompt for tool {_toolName}:");
+                Console.Error.WriteLine(ex.ToString());
+
+                return string.Empty;
+            }
         }
 
         private async Task<string> LoadMemoryBank()
@@ -100,7 +113,13 @@ public class ManifestToolsLoader
             foreach (var file in files)
             {
                 var uri = new Uri(new Uri(_memoryBank.BaseUrl), file);
-                var content = await new HttpClient().GetStringAsync(uri);
+                var request = new HttpRequestMessage(HttpMethod.Get, uri);
+                request.Headers.Referrer = new Uri("https://aws.net.mcp/");
+
+                using var response = await httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
                 writer.WriteString(file, content);
             }
             writer.WriteEndObject();

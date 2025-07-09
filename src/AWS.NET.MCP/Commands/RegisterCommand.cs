@@ -13,13 +13,19 @@ public class RegisterCommand(IFileManager fileManager) : Command<RegisterCommand
     public class Settings : CommandSettings
     {
         [CommandArgument(0, "[tool-name]")]
-        [Description($"LLM tool to register the AWS .NET MCP server with. Valid values are: {nameof(ToolName.AmazonQ)}")]
+        [Description($"LLM tool to register the AWS .NET MCP server with. {Constants.VALID_TOOLNAMES_VALUES}")]
         [TypeConverter(typeof(CaseInsensitiveEnumConverter<ToolName>))]
         public ToolName? Tool { get; set; }
     }
 
     public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
     {
+        if (settings.Tool == null)
+        {
+            AnsiConsole.MarkupLine($"[red]Tool name is required. {Constants.VALID_TOOLNAMES_VALUES}[/]");
+            return 1;
+        }
+
         switch (settings.Tool)
         {
             case ToolName.AmazonQ:
@@ -83,6 +89,8 @@ public class RegisterCommand(IFileManager fileManager) : Command<RegisterCommand
 
         // 5. Write back to file with indentation
         var options = new JsonSerializerOptions { WriteIndented = true };
+
+        AnsiConsole.MarkupLine($"Register in MCP config file [green]{mcpJsonPath}[/].");
         await fileManager.WriteAllTextAsync(mcpJsonPath, root.ToJsonString(options));
     }
 
