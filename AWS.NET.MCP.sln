@@ -1,11 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36203.30 d17.14
+VisualStudioVersion = 17.14.36203.30
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.NET.MCP", "src\AWS.NET.MCP\AWS.NET.MCP.csproj", "{1546549C-D18D-49F3-A5E1-9A6CF5E017F4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{304F9B8B-03F1-4280-B3E6-509F9431B96D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.NET.MCP.UnitTests", "tests\AWS.NET.MCP.UnitTests\AWS.NET.MCP.UnitTests.csproj", "{ED2634ED-4B64-49D1-8076-C84AA3659049}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,11 +21,19 @@ Global
 		{1546549C-D18D-49F3-A5E1-9A6CF5E017F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1546549C-D18D-49F3-A5E1-9A6CF5E017F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1546549C-D18D-49F3-A5E1-9A6CF5E017F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED2634ED-4B64-49D1-8076-C84AA3659049}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED2634ED-4B64-49D1-8076-C84AA3659049}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED2634ED-4B64-49D1-8076-C84AA3659049}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED2634ED-4B64-49D1-8076-C84AA3659049}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1546549C-D18D-49F3-A5E1-9A6CF5E017F4} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{ED2634ED-4B64-49D1-8076-C84AA3659049} = {304F9B8B-03F1-4280-B3E6-509F9431B96D}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {910681D5-0102-4016-B787-36C58AAD585A}
 	EndGlobalSection
 EndGlobal

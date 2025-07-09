@@ -5,10 +5,11 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <PackageId>AWS.Deploy.Tools</PackageId>
+        <PackageId>AWS.NET.MCP</PackageId>
         <ToolCommandName>dotnet-aws-mcp</ToolCommandName>
         <IsPackable>true</IsPackable>
-        <PackAsTool>true</PackAsTool>        
+        <PackAsTool>true</PackAsTool>
+        <Version>0.1.0</Version>
     </PropertyGroup>
 
     <ItemGroup>
