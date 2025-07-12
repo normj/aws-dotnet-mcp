@@ -1,5 +1,6 @@
 ﻿using AWS.NET.MCP.Utils;
 using ModelContextProtocol.Server;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 
@@ -28,9 +29,9 @@ public class ManifestToolsLoader
             if (!manifest.MemoryBanks.TryGetValue(kvp.Value.MemoryBank, out var memoryBank))
                 throw new InvalidOperationException($"The memory bank {kvp.Value.MemoryBank} referenced by the tool {kvp.Key} does not exist in the manifest list of memory banks");
 
-            var toolWrapper = new ToolWrapper(kvp.Key, kvp.Value.Prompt, memoryBank);
+            var toolWrapper = new ToolWrapper(kvp.Key, kvp.Value.Prompt, memoryBank, kvp.Value.Partitions);
 
-            tools.Add(McpServerTool.Create(toolWrapper.ExecuteAsync, new McpServerToolCreateOptions
+            tools.Add(McpServerTool.Create(toolWrapper.Execute, new McpServerToolCreateOptions
             {
                 Name = kvp.Key,
                 Description = kvp.Value.Description
@@ -66,25 +67,30 @@ public class ManifestToolsLoader
             Those files can be found as keys in the JSON document.
             """;
 
+        private static readonly ConcurrentDictionary<Uri, string> _cachedMemoryBankFiles = new ConcurrentDictionary<Uri, string>();
+
         private readonly string _toolName;
         private readonly string _prompt;
-        private readonly MemoryBank _memoryBank;
+        private readonly ToolMemoryBankIdentifier _toolMemoryBankIdentifier;
+        private readonly IList<string> _partitions;
 
-        public ToolWrapper(string toolName, string prompt, MemoryBank memoryBank) 
+        public ToolWrapper(string toolName, string prompt, ToolMemoryBankIdentifier toolMemoryBankIdentifier, IList<string> partitions) 
         {
             _toolName = toolName;
             _prompt = prompt;
-            _memoryBank = memoryBank;
+            _toolMemoryBankIdentifier = toolMemoryBankIdentifier;
+            _partitions = partitions;
         }
 
-        public async Task<string> ExecuteAsync()
+        public string Execute()
         {
             try
             {
-                var memoryBankDefinition = await LoadMemoryBank();
+                var memoryBankManifest = LoadMemoryBankManifest();
+                var memoryBankDefinition = LoadMemoryBank(memoryBankManifest);
 
                 var builder = new StringBuilder();
-                builder.AppendLine(MEMORY_BANK_DESCRIPTION.Replace("{START_FILE}", _memoryBank.StartFile));
+                builder.AppendLine(MEMORY_BANK_DESCRIPTION.Replace("{START_FILE}", memoryBankManifest.StartFile));
                 builder.AppendLine(_prompt);
                 builder.AppendLine(memoryBankDefinition);
 
@@ -100,11 +106,31 @@ public class ManifestToolsLoader
             }
         }
 
-        private async Task<string> LoadMemoryBank()
+        private MemoryBankManifest LoadMemoryBankManifest()
         {
-            using var httpClient = new HttpClient();
-            var files = new List<string>(_memoryBank.AdditionalFiles);
-            files.Add(_memoryBank.StartFile);
+            var uri = new Uri(new Uri(_toolMemoryBankIdentifier.BaseUrl), _toolMemoryBankIdentifier.Manifest);
+            var json = LoadFile(uri);
+            var manifest = JsonSerializer.Deserialize<MemoryBankManifest>(json, McpJsonContext.Default.MemoryBankManifest);
+            if (manifest == null)
+                throw new InvalidOperationException("Invalid JSON for Memory Bank json manifest");
+
+            return manifest;
+        }
+
+        private string LoadMemoryBank(MemoryBankManifest memoryBankManifest)
+        {
+            var files = new List<string>(memoryBankManifest.CoreFiles)
+            {
+                memoryBankManifest.StartFile
+            };
+
+            foreach (var partition in memoryBankManifest.Partitions.Where(x => _partitions.Contains(x.Name)))
+            {
+                foreach (var file in partition.Files)
+                {
+                    files.Add($"partitions/{partition.Name}/{file}");
+                }
+            }
 
             using var stream = new MemoryStream();
             using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false });
@@ -112,14 +138,8 @@ public class ManifestToolsLoader
             writer.WriteStartObject();
             foreach (var file in files)
             {
-                var uri = new Uri(new Uri(_memoryBank.BaseUrl), file);
-                var request = new HttpRequestMessage(HttpMethod.Get, uri);
-                request.Headers.Referrer = new Uri("https://aws.net.mcp/");
-
-                using var response = await httpClient.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-
-                var content = await response.Content.ReadAsStringAsync();
+                var uri = new Uri(new Uri(_toolMemoryBankIdentifier.BaseUrl), file);
+                var content = LoadFile(uri);
                 writer.WriteString(file, content);
             }
             writer.WriteEndObject();
@@ -129,6 +149,25 @@ public class ManifestToolsLoader
             string json = Encoding.UTF8.GetString(stream.ToArray());
 
             return json;
+        }
+
+
+        private static string LoadFile(Uri uri)
+        {
+            var content = _cachedMemoryBankFiles.GetOrAdd(uri, (uri) =>
+            {
+                using var httpClient = new HttpClient();
+                var request = new HttpRequestMessage(HttpMethod.Get, uri);
+                request.Headers.Referrer = new Uri("https://aws.net.mcp/");
+
+                using var response = httpClient.Send(request);
+                response.EnsureSuccessStatusCode();
+
+                using var stream = response.Content.ReadAsStream();
+                return new StreamReader(stream).ReadToEnd();
+            });
+
+            return content;
         }
     }
 }

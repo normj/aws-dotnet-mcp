@@ -1,27 +1,21 @@
 {
   "memory-banks": {
-    "default-sdk": {
-      "base-url": "https://raw.githubusercontent.com/aws/aws-sdk-net/refs/heads/boblod-ai-memory-bank/memory-bank/",
-      "start-file": "start.md",
-      "additional-files": [
-        "projectbrief.md",
-        "productContext.md",
-        "activeContext.md",
-        "systemPatterns.md",
-        "techContext.md",
-        "progress.md"
-      ]
+    "sdk": {
+      "base-url": "https://raw.githubusercontent.com/aws/aws-sdk-net/refs/heads/boblod-ai-memory-bank-v2/memory-bank/",
+      "manifest": "manifest.json"
     }
   },
   "tools": {
     "ProvideAWSSDKMemoryBank": {
       "description": "Provide additional information for migrating .NET applications to version 4 or V4 of the AWS SDK for .NET.",
-      "memory-bank": "default-sdk",
+      "memory-bank": "sdk",
+      "partitions": [ "v3v4-upgrade" ],
       "prompt": "The memory bank describes the V4 architecture including information on how to migrate from previous versions."
     },
     "UploadToS3": {
       "description": "Provide additional information for uploading objects and files to S3 using the AWS SDK for .NET.",
-      "memory-bank": "default-sdk",
+      "memory-bank": "sdk",
+      "partitions": [ "sdkhelper" ],
       "prompt": "The SDK provides the S3 service client AmazonS3Client which provides the low level S3 APIs. For improved performance the TransferUtility class from the Amazon.S3.Transfer namespace should be used."
     }    
   }
