@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 
 namespace AWS.NET.MCP.Tools;
 
-[McpServerToolType]
+//[McpServerToolType]
 public class FindSdkUsageTool
 {
-    [McpServerTool, Description("Find in a workspace all the files that use the AWS SDK for .NET.")]
+    //[McpServerTool, Description("Find in a workspace all the files that use the AWS SDK for .NET.")]
     public static async Task<string> FindFilesUsingSdkAsync([Description("The path to workspace or solution file that should be searched.")] string workspace)
     {
         var msBuildWorkspace = MSBuildWorkspace.Create();
